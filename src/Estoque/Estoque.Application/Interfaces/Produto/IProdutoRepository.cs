@@ -10,6 +10,7 @@ namespace Estoque.Application.Interfaces
         void Atualizar(Produto produto);
         void Deletar(Produto produto);
         Task SalvarAlteracoesAsync();
+        Task<bool> ExisteProdutoComCodigoAsync(int codigo, int? idProdutoIgnorar = null);
 
     }
 }

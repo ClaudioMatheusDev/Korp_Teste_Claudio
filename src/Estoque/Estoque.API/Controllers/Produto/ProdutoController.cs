@@ -6,7 +6,7 @@ namespace Estoque.API.Controllers.Produto
 {
     [ApiController]
     [Route("api/produto")]
-    public class ProdutoController : Controller
+    public class ProdutoController : ControllerBase
     {
         private readonly IProdutoService _produtoService;
         public ProdutoController(IProdutoService produtoService)

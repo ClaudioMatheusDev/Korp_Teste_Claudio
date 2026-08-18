@@ -6,18 +6,33 @@ namespace Estoque.Infrastructure.Data
     public class AppDbContext : DbContext
     {
 
-      public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
-        } 
+        }
 
 
-        public DbSet<Produto> produtos { get; set; }
-        //public DbSet<Estoque> estoques { get; set; }
+        public DbSet<Produto> Produtos { get; set; }
+        public DbSet<MovimentacaoEstoque> MovimentacaoesEstoque { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Produto>().HasKey(produto => produto.IDProduto);
-            modelBuilder.Entity<Produto>().Property(produto => produto.ValorProduto).HasPrecision(18, 2);
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Produto>()
+                .HasKey(p => p.IDProduto);
+
+            modelBuilder.Entity<Produto>()
+                .Property(p => p.ValorProduto)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<MovimentacaoEstoque>()
+                .HasKey(m => m.IDMovimentacaoEstoque);
+
+            modelBuilder.Entity<MovimentacaoEstoque>()
+                .HasOne(m => m.Produto)
+                .WithMany(p => p.MovimentacoesEstoque)
+                .HasForeignKey(m => m.IDProduto)
+                .OnDelete(DeleteBehavior.Restrict);
         }
-        }
+    }
 }

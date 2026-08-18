@@ -2,7 +2,7 @@
 
 namespace Estoque.Application.DTOs
 {
-    public class EntradaEstoqueDto
+    public class SaidaEstoqueDto
     {
         [Range(1, int.MaxValue, ErrorMessage = "O ID do produto deve ser maior que zero.")]
         public int IDProduto { get; set; }

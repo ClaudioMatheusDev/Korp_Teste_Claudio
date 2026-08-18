@@ -17,22 +17,22 @@ namespace Estoque.Infrastructure
 
         public async Task AdicionarProdutoAsync(Produto produto)
         {
-            await _context.produtos.AddAsync(produto);
+            await _context.Produtos.AddAsync(produto);
         }
 
         public async Task<Produto?> BuscarProdutoPorIDAsync(int IDProduto)
         {
-            return await _context.produtos.FirstOrDefaultAsync(p => p.IDProduto == IDProduto);
+            return await _context.Produtos.FirstOrDefaultAsync(p => p.IDProduto == IDProduto);
         }
 
         public async Task<List<Produto>> BuscarTodosProdutosAsync()
         {
-            return await _context.produtos.ToListAsync();
+            return await _context.Produtos.ToListAsync();
         }
 
         public void Atualizar(Produto produto)
         {
-            _context.produtos.Update(produto);
+            _context.Produtos.Update(produto);
         }
 
         public void Deletar(Produto produto)
@@ -43,6 +43,11 @@ namespace Estoque.Infrastructure
         public async Task SalvarAlteracoesAsync()
         {
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> ExisteProdutoComCodigoAsync(int codigo, int? idProdutoIgnorar = null)
+        {
+            return await _context.Produtos.AnyAsync(p => p.Codigo == codigo && p.IDProduto != idProdutoIgnorar);
         }
 
     }

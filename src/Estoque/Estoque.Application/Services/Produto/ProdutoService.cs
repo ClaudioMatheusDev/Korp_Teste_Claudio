@@ -16,6 +16,11 @@ namespace Estoque.Application.Services
 
         public async Task<int> CriarProdutoAsync(ProdutoCriarDto produtoCriarDto)
         {
+            if (await _produtoRepository.ExisteProdutoComCodigoAsync(produtoCriarDto.Codigo))
+            {
+                throw new InvalidOperationException($"Já existe um produto cadastrado com o código {produtoCriarDto.Codigo}.");
+            }
+
             var produto = new Produto
             {
                 Codigo = produtoCriarDto.Codigo,
@@ -79,6 +84,12 @@ namespace Estoque.Application.Services
             {
                 throw new Exception("Nenhum produto encontrado com esse IDProduto.");
             }
+
+            if (await _produtoRepository.ExisteProdutoComCodigoAsync(produtoAtualizarDto.Codigo, IDProduto))
+            {
+                throw new InvalidOperationException($"Já existe outro produto cadastrado com o código {produtoAtualizarDto.Codigo}.");
+            }
+
             produto.Codigo = produtoAtualizarDto.Codigo;
             produto.Descricao = produtoAtualizarDto.Descricao;
             produto.ValorProduto = produtoAtualizarDto.ValorProduto;
