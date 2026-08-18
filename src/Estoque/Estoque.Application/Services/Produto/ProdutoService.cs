@@ -1,4 +1,5 @@
 ﻿using Estoque.Application.DTOs;
+using Estoque.Application.Exceptions;
 using Estoque.Application.Interfaces;
 using Estoque.Domain.Entities;
 
@@ -18,7 +19,7 @@ namespace Estoque.Application.Services
         {
             if (await _produtoRepository.ExisteProdutoComCodigoAsync(produtoCriarDto.Codigo))
             {
-                throw new InvalidOperationException($"Já existe um produto cadastrado com o código {produtoCriarDto.Codigo}.");
+                throw new ConflictException($"Já existe um produto cadastrado com o código {produtoCriarDto.Codigo}.");
             }
 
             var produto = new Produto
@@ -41,7 +42,7 @@ namespace Estoque.Application.Services
 
             if (produto == null)
             {
-                throw new Exception("Nenhum produto encontrado com esse IDProduto .");
+                throw new NotFoundException("Nenhum produto encontrado com esse IDProduto.");
             }
 
             return new ProdutoResponseDto
@@ -62,7 +63,7 @@ namespace Estoque.Application.Services
 
             if (produtos == null || produtos.Count == 0)
             {
-                throw new Exception("Nenhum produto encontrado.");
+                throw new NotFoundException("Nenhum produto encontrado.");
             }
 
             return produtos.Select(p => new ProdutoResponseDto
@@ -82,12 +83,12 @@ namespace Estoque.Application.Services
             var produto = await _produtoRepository.BuscarProdutoPorIDAsync(IDProduto);
             if (produto == null)
             {
-                throw new Exception("Nenhum produto encontrado com esse IDProduto.");
+                throw new NotFoundException("Nenhum produto encontrado com esse IDProduto.");
             }
 
             if (await _produtoRepository.ExisteProdutoComCodigoAsync(produtoAtualizarDto.Codigo, IDProduto))
             {
-                throw new InvalidOperationException($"Já existe outro produto cadastrado com o código {produtoAtualizarDto.Codigo}.");
+                throw new ConflictException($"Já existe outro produto cadastrado com o código {produtoAtualizarDto.Codigo}.");
             }
 
             produto.Codigo = produtoAtualizarDto.Codigo;
@@ -107,7 +108,7 @@ namespace Estoque.Application.Services
             var produto = await _produtoRepository.BuscarProdutoPorIDAsync(IDProduto);
             if (produto == null)
             {
-                throw new Exception("Nenhum produto encontrado com esse IDProduto.");
+                throw new NotFoundException("Nenhum produto encontrado com esse IDProduto.");
             }
             _produtoRepository.Deletar(produto);
             await _produtoRepository.SalvarAlteracoesAsync();

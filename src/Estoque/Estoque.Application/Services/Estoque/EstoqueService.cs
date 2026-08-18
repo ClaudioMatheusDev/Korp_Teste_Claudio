@@ -1,4 +1,5 @@
 ﻿using Estoque.Application.DTOs;
+using Estoque.Application.Exceptions;
 using Estoque.Application.Interfaces;
 using Estoque.Domain.Entities;
 using Estoque.Domain.Enums;
@@ -21,10 +22,10 @@ namespace Estoque.Application.Services
             var produto = await _produtoRepository.BuscarProdutoPorIDAsync(dto.IDProduto);
 
             if (produto == null)
-                throw new Exception("Produto não encontrado.");
+                throw new NotFoundException("Produto não encontrado.");
 
             if (dto.Quantidade <= 0)
-                throw new Exception("A quantidade deve ser maior que zero.");
+                throw new BusinessRuleException("A quantidade deve ser maior que zero.");
 
             var saldoAnterior = produto.QuantidadeEstoque;
 
@@ -53,7 +54,7 @@ namespace Estoque.Application.Services
 
             if (produto == null)
             {
-                throw new Exception("Nenhum produto para esse IDProduto");
+                throw new NotFoundException("Nenhum produto para esse IDProduto.");
             }
 
             var movimentacao = await _movimentacao.BuscarProdutoAsync(IDProduto);
@@ -87,13 +88,13 @@ namespace Estoque.Application.Services
             var produto = await _produtoRepository.BuscarProdutoPorIDAsync(dto.IDProduto);
 
             if (produto == null)
-                throw new Exception("Produto não encontrado.");
+                throw new NotFoundException("Produto não encontrado.");
 
             if (dto.Quantidade <= 0)
-                throw new Exception("A quantidade deve ser maior que zero.");
+                throw new BusinessRuleException("A quantidade deve ser maior que zero.");
 
             if (produto.QuantidadeEstoque < dto.Quantidade)
-                throw new Exception("Saldo insuficiente.");
+                throw new BusinessRuleException("Saldo insuficiente.");
 
             var saldoAnterior = produto.QuantidadeEstoque;
 
