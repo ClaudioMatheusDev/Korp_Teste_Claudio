@@ -75,5 +75,26 @@ namespace Faturamento.API.Controllers.Faturamento
                 });
             }
         }
+
+        [HttpPost("{IDNotaFiscal:int}/imprimir")]
+        public async Task<IActionResult> ImprimirNota(int IDNotaFiscal)
+        {
+            try
+            {
+                await _notaService.ImprimirNotaFiscal(IDNotaFiscal);
+
+                return Ok(new
+                {
+                    Message = "Nota fiscal impressa e fechada com sucesso."
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    Message = ex.Message
+                });
+            }
+        }
     }
 }

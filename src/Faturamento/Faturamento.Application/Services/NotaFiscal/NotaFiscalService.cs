@@ -8,10 +8,12 @@ namespace Faturamento.Application.Services
     public class NotaFiscalService : INotaFiscalService
     {
         private readonly INotaFiscalRepository _notaFiscalRepository;
+        private readonly IEstoqueClient _estoqueClient;
 
-        public NotaFiscalService(INotaFiscalRepository notaFiscalRepository)
+        public NotaFiscalService(INotaFiscalRepository notaFiscalRepository, IEstoqueClient estoqueClient)
         {
             _notaFiscalRepository = notaFiscalRepository;
+            _estoqueClient = estoqueClient;
         }
 
         public async Task<int> CriarNotaFiscalAsync(NotaFiscalCriarDto dto)
@@ -94,6 +96,42 @@ namespace Faturamento.Application.Services
                 DataCriacao = p.DataCriacao,
                 DataFechamento = p.DataFechamento
             }).ToList();
+        }
+
+        public async Task ImprimirNotaFiscal(int IDNotaFiscal)
+        {
+            var notaFiscal = await _notaFiscalRepository.BuscarNotaFiscalPorIDAsync(IDNotaFiscal);
+
+            if (notaFiscal == null)
+            {
+                throw new Exception("Nota fiscal não encontrada.");
+            }
+
+            if (notaFiscal.Status != StatusNotaFiscal.Aberta)
+            {
+                throw new Exception(
+                    "Somente notas fiscais abertas podem ser impressas.");
+            }
+
+            var baixaEstoque = new BaixaEstoqueLoteDto
+            {
+                IDNotaFiscal = notaFiscal.IDNotaFiscal,
+
+                Itens = notaFiscal.Itens
+            .Select(item => new ItemBaixaEstoqueDto
+            {
+                IDProduto = item.IDProduto,
+                Quantidade = item.Quantidade
+            })
+            .ToList()
+            };
+
+            await _estoqueClient.BaixarEstoqueLoteAsync(baixaEstoque);
+
+            notaFiscal.Status = StatusNotaFiscal.Fechada;
+            notaFiscal.DataFechamento = DateTime.Now;
+
+            await _notaFiscalRepository.SalvarAlteracoesAsync();
         }
     }
 }
