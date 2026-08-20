@@ -1,0 +1,70 @@
+<h2>Notas Fiscais</h2>
+
+<p *ngIf="erro" style="color: red">{{ erro }}</p>
+
+<form [formGroup]="form" (ngSubmit)="salvar()">
+  <div formArrayName="itens">
+    <div *ngFor="let item of itens.controls; let i = index" [formGroupName]="i">
+      <label>
+        Produto (ID)
+        <input type="number" formControlName="idProduto" />
+      </label>
+
+      <label>
+        Quantidade
+        <input type="number" formControlName="quantidade" />
+      </label>
+
+      <button type="button" (click)="removerItem(i)" [disabled]="itens.length === 1">
+        Remover
+      </button>
+    </div>
+  </div>
+
+  <button type="button" (click)="adicionarItem()">+ Adicionar produto</button>
+
+  <br /><br />
+
+  <button type="submit" [disabled]="salvando">
+    {{ salvando ? 'Salvando...' : 'Criar nota fiscal' }}
+  </button>
+</form>
+
+<hr />
+
+<p *ngIf="carregando">Carregando notas...</p>
+
+<table *ngIf="!carregando">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Número</th>
+      <th>Status</th>
+      <th>Data criação</th>
+      <th>Data fechamento</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let nota of notas">
+      <td>{{ nota.idNotaFiscal }}</td>
+      <td>{{ nota.numero }}</td>
+      <td>{{ nota.status === StatusNotaFiscal.Aberta ? 'Aberta' : 'Fechada' }}</td>
+      <td>{{ nota.dataCriacao }}</td>
+      <td>{{ nota.dataFechamento ?? '-' }}</td>
+      <td>
+        <button
+          *ngIf="nota.status === StatusNotaFiscal.Aberta"
+          type="button"
+          (click)="imprimir(nota)"
+          [disabled]="imprimindoId === nota.idNotaFiscal"
+        >
+          {{ imprimindoId === nota.idNotaFiscal ? 'Imprimindo...' : 'Imprimir' }}
+        </button>
+      </td>
+    </tr>
+    <tr *ngIf="notas.length === 0">
+      <td colspan="6">Nenhuma nota fiscal cadastrada.</td>
+    </tr>
+  </tbody>
+</table>
