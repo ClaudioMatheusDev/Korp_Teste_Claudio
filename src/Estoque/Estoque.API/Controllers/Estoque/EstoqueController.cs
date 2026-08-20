@@ -81,5 +81,25 @@ namespace Estoque.API.Controllers.Estoque
                 });
             }
         }
+        [HttpPost("baixar-lote")]
+        public async Task<IActionResult> BaixarLote([FromBody] BaixaEstoqueLoteDto dto)
+        {
+            try
+            {
+                await _estoqueService.BaixarLoteAsync(dto);
+
+                return Ok(new
+                {
+                    Message = "Baixa de estoque realizada com sucesso."
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    Message = ex.Message
+                });
+            }
+        }
     }
 }

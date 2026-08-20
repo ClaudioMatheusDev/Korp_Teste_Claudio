@@ -7,5 +7,6 @@ namespace Estoque.Application.Interfaces
         Task<int> EntradaAsync(EntradaEstoqueDto dto);
         Task<int> SaidaAsync(SaidaEstoqueDto dto);
         Task<MovimentacoesDetalhesDto> MovimentacoesDetalhesAsync(int IDProduto);
+        Task BaixarLoteAsync(BaixaEstoqueLoteDto dto);
     }
 }
