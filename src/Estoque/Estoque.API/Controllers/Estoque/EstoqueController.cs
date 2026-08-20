@@ -1,4 +1,4 @@
-﻿using Estoque.Application.DTOs;
+using Estoque.Application.DTOs;
 using Estoque.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,67 +19,48 @@ namespace Estoque.API.Controllers.Estoque
         public async Task<IActionResult> CriarEntrada(
             [FromBody] EntradaEstoqueDto entradaEstoqueDto)
         {
-            try
-            {
-                var idProduto =
-                    await _estoqueService.EntradaAsync(entradaEstoqueDto);
+            var idProduto =
+                await _estoqueService.EntradaAsync(entradaEstoqueDto);
 
-                return Ok(new
-                {
-                    IDProduto = idProduto,
-                    Message = "Entrada de estoque realizada com sucesso."
-                });
-            }
-            catch (Exception ex)
+            return Ok(new
             {
-                return StatusCode(500, new
-                {
-                    Message = ex.Message
-                });
-            }
+                IDProduto = idProduto,
+                Message = "Entrada de estoque realizada com sucesso."
+            });
         }
 
         [HttpPost("saida")]
         public async Task<IActionResult> CriarSaida(
             [FromBody] SaidaEstoqueDto saidaEstoqueDto)
         {
-            try
-            {
-                var idProduto =
-                    await _estoqueService.SaidaAsync(saidaEstoqueDto);
+            var idProduto =
+                await _estoqueService.SaidaAsync(saidaEstoqueDto);
 
-                return Ok(new
-                {
-                    IDProduto = idProduto,
-                    Message = "Saída de estoque realizada com sucesso."
-                });
-            }
-            catch (Exception ex)
+            return Ok(new
             {
-                return StatusCode(500, new
-                {
-                    Message = ex.Message
-                });
-            }
+                IDProduto = idProduto,
+                Message = "Saída de estoque realizada com sucesso."
+            });
         }
 
         [HttpGet("produtos/{IDProduto:int}/movimentacoes")]
         public async Task<IActionResult> Movimentacoes(int IDProduto)
         {
-            try
-            {
-                var movimentacoes =
-                    await _estoqueService.MovimentacoesDetalhesAsync(IDProduto);
+            var movimentacoes =
+                await _estoqueService.MovimentacoesDetalhesAsync(IDProduto);
 
-                return Ok(movimentacoes);
-            }
-            catch (Exception ex)
+            return Ok(movimentacoes);
+        }
+
+        [HttpPost("baixar-lote")]
+        public async Task<IActionResult> BaixarLote([FromBody] BaixaEstoqueLoteDto dto)
+        {
+            await _estoqueService.BaixarLoteAsync(dto);
+
+            return Ok(new
             {
-                return StatusCode(500, new
-                {
-                    Message = ex.Message
-                });
-            }
+                Message = "Baixa de estoque realizada com sucesso."
+            });
         }
     }
 }
