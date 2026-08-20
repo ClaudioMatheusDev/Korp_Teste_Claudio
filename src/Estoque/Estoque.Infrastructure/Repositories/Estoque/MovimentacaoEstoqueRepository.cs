@@ -24,6 +24,12 @@ namespace Estoque.Infrastructure.Repositories
             return await _context.MovimentacaoesEstoque.Where(p => p.IDProduto == IDProduto).OrderByDescending(p => p.DataMovimentacao).ToListAsync();
         }
 
+        public async Task<bool> ExisteBaixaParaNotaFiscalAsync(int idNotaFiscal)
+        {
+            return await _context.MovimentacaoesEstoque
+                .AnyAsync(m => m.IDNotaFiscalOrigem == idNotaFiscal);
+        }
+
         public async Task SalvarAsync()
         {
             await _context.SaveChangesAsync();

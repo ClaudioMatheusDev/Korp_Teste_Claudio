@@ -19,82 +19,42 @@ namespace Faturamento.API.Controllers.Faturamento
         public async Task<IActionResult> CriarNota(
             [FromBody] NotaFiscalCriarDto notaFiscalCriarDto)
         {
-            try
-            {
-                var idNota =
-                    await _notaService.CriarNotaFiscalAsync(notaFiscalCriarDto);
+            var idNota =
+                await _notaService.CriarNotaFiscalAsync(notaFiscalCriarDto);
 
-                return Ok(new
-                {
-                    IDNotaFiscal = idNota,
-                    Message = "Nota fiscal criada com sucesso."
-                });
-            }
-            catch (Exception ex)
+            return Ok(new
             {
-                return StatusCode(500, new
-                {
-                    Message = ex.Message
-                });
-            }
+                IDNotaFiscal = idNota,
+                Message = "Nota fiscal criada com sucesso."
+            });
         }
 
         [HttpGet]
         public async Task<IActionResult> ListarNotas()
         {
-            try
-            {
-                var notas = await _notaService.ListarNotasFiscaisAsync();
+            var notas = await _notaService.ListarNotasFiscaisAsync();
 
-                return Ok(notas);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    Message = ex.Message
-                });
-            }
+            return Ok(notas);
         }
 
         [HttpGet("{IDNotaFiscal:int}")]
         public async Task<IActionResult> BuscarNota(int IDNotaFiscal)
         {
-            try
-            {
-                var nota =
-                    await _notaService.BuscarNotaFiscalAsync(IDNotaFiscal);
+            var nota =
+                await _notaService.BuscarNotaFiscalAsync(IDNotaFiscal);
 
-                return Ok(nota);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    Message = ex.Message
-                });
-            }
+            return Ok(nota);
         }
 
         [HttpPost("{IDNotaFiscal:int}/imprimir")]
         public async Task<IActionResult> ImprimirNota(int IDNotaFiscal)
         {
-            try
-            {
-                await _notaService.ImprimirNotaFiscal(IDNotaFiscal);
+            await _notaService.ImprimirNotaFiscal(IDNotaFiscal);
 
-                return Ok(new
-                {
-                    Message = "Nota fiscal impressa e fechada com sucesso."
-                });
-            }
-            catch (Exception ex)
+            return Ok(new
             {
-                return BadRequest(new
-                {
-                    Message = ex.Message
-                });
-            }
+                Message = "Nota fiscal impressa e fechada com sucesso."
+            });
         }
     }
 }

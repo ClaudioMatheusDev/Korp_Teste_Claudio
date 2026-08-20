@@ -122,14 +122,17 @@ namespace Estoque.Application.Services
         public async Task BaixarLoteAsync(BaixaEstoqueLoteDto dto)
         {
             if (dto.Itens == null || dto.Itens.Count == 0)
-                throw new Exception("Nenhum item informado para baixa.");
+                throw new BusinessRuleException("Nenhum item informado para baixa.");
+
+            if (await _movimentacao.ExisteBaixaParaNotaFiscalAsync(dto.IDNotaFiscal))
+                return;
 
             var produtosParaBaixa = new List<(Produto Produto, int Quantidade)>();
 
             foreach (var item in dto.Itens)
             {
                 if (item.Quantidade <= 0)
-                    throw new Exception(
+                    throw new BusinessRuleException(
                         $"Quantidade inválida para o produto {item.IDProduto}."
                     );
 
@@ -137,12 +140,12 @@ namespace Estoque.Application.Services
                     await _produtoRepository.BuscarProdutoPorIDAsync(item.IDProduto);
 
                 if (produto == null)
-                    throw new Exception(
+                    throw new NotFoundException(
                         $"Produto {item.IDProduto} não encontrado."
                     );
 
                 if (produto.QuantidadeEstoque < item.Quantidade)
-                    throw new Exception(
+                    throw new BusinessRuleException(
                         $"Saldo insuficiente para o produto {produto.IDProduto}."
                     );
 
@@ -164,6 +167,7 @@ namespace Estoque.Application.Services
                     SaldoAnterior = saldoAnterior,
                     SaldoPosterior = item.Produto.QuantidadeEstoque,
                     Motivo = $"Saída referente à Nota Fiscal {dto.IDNotaFiscal}",
+                    IDNotaFiscalOrigem = dto.IDNotaFiscal,
                     DataMovimentacao = DateTime.Now
                 };
 
