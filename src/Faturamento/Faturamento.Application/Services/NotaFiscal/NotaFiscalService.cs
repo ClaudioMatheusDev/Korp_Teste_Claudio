@@ -1,29 +1,38 @@
 ﻿using Faturamento.Application.Dtos;
+using Faturamento.Application.Exceptions;
 using Faturamento.Application.Interfaces;
 using Faturamento.Domain.Entities;
 using Faturamento.Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace Faturamento.Application.Services
 {
     public class NotaFiscalService : INotaFiscalService
     {
         private readonly INotaFiscalRepository _notaFiscalRepository;
+        private readonly IEstoqueClient _estoqueClient;
+        private readonly ILogger<NotaFiscalService> _logger;
 
-        public NotaFiscalService(INotaFiscalRepository notaFiscalRepository)
+        public NotaFiscalService(
+            INotaFiscalRepository notaFiscalRepository,
+            IEstoqueClient estoqueClient,
+            ILogger<NotaFiscalService> logger)
         {
             _notaFiscalRepository = notaFiscalRepository;
+            _estoqueClient = estoqueClient;
+            _logger = logger;
         }
 
         public async Task<int> CriarNotaFiscalAsync(NotaFiscalCriarDto dto)
         {
             if (dto.Itens == null || dto.Itens.Count == 0)
             {
-                throw new Exception("A nota fiscal deve possuir pelo menos um item.");
+                throw new BusinessRuleException("A nota fiscal deve possuir pelo menos um item.");
             }
 
             if (dto.Itens.Any(i => i.Quantidade <= 0))
             {
-                throw new Exception("Todos os itens devem possuir quantidade maior que zero.");
+                throw new BusinessRuleException("Todos os itens devem possuir quantidade maior que zero.");
             }
 
             var proximoNumero =
@@ -59,7 +68,7 @@ namespace Faturamento.Application.Services
 
             if (notaFiscal == null)
             {
-                throw new Exception("Nota fiscal não encontrada.");
+                throw new NotFoundException("Nota fiscal não encontrada.");
             }
 
             return new NotaFiscalDetalhesDto
@@ -94,6 +103,53 @@ namespace Faturamento.Application.Services
                 DataCriacao = p.DataCriacao,
                 DataFechamento = p.DataFechamento
             }).ToList();
+        }
+
+        public async Task ImprimirNotaFiscal(int IDNotaFiscal)
+        {
+            var notaFiscal = await _notaFiscalRepository.BuscarNotaFiscalPorIDAsync(IDNotaFiscal);
+
+            if (notaFiscal == null)
+            {
+                throw new NotFoundException("Nota fiscal não encontrada.");
+            }
+
+            if (notaFiscal.Status == StatusNotaFiscal.Fechada)
+            {
+                return;
+            }
+
+            var baixaEstoque = new BaixaEstoqueLoteDto
+            {
+                IDNotaFiscal = notaFiscal.IDNotaFiscal,
+
+                Itens = notaFiscal.Itens
+            .Select(item => new ItemBaixaEstoqueDto
+            {
+                IDProduto = item.IDProduto,
+                Quantidade = item.Quantidade
+            })
+            .ToList()
+            };
+
+            await _estoqueClient.BaixarEstoqueLoteAsync(baixaEstoque);
+
+            notaFiscal.Status = StatusNotaFiscal.Fechada;
+            notaFiscal.DataFechamento = DateTime.Now;
+
+            try
+            {
+                await _notaFiscalRepository.SalvarAlteracoesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex,
+                    "Baixa de estoque da Nota Fiscal {IDNotaFiscal} foi confirmada no Estoque, " +
+                    "mas falhou ao salvar o fechamento da nota no Faturamento. Requer reprocessamento.",
+                    notaFiscal.IDNotaFiscal);
+
+                throw;
+            }
         }
     }
 }

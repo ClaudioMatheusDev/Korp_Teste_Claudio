@@ -17,6 +17,7 @@ namespace Estoque.Application.Services
             _produtoRepository = produtoRepository;
         }
 
+
         public async Task<int> EntradaAsync(EntradaEstoqueDto dto)
         {
             var produto = await _produtoRepository.BuscarProdutoPorIDAsync(dto.IDProduto);
@@ -115,6 +116,65 @@ namespace Estoque.Application.Services
             await _movimentacao.SalvarAsync();
 
             return produto.IDProduto;
+        }
+
+
+        public async Task BaixarLoteAsync(BaixaEstoqueLoteDto dto)
+        {
+            if (dto.Itens == null || dto.Itens.Count == 0)
+                throw new BusinessRuleException("Nenhum item informado para baixa.");
+
+            if (await _movimentacao.ExisteBaixaParaNotaFiscalAsync(dto.IDNotaFiscal))
+                return;
+
+            var produtosParaBaixa = new List<(Produto Produto, int Quantidade)>();
+
+            foreach (var item in dto.Itens)
+            {
+                if (item.Quantidade <= 0)
+                    throw new BusinessRuleException(
+                        $"Quantidade inválida para o produto {item.IDProduto}."
+                    );
+
+                var produto =
+                    await _produtoRepository.BuscarProdutoPorIDAsync(item.IDProduto);
+
+                if (produto == null)
+                    throw new NotFoundException(
+                        $"Produto {item.IDProduto} não encontrado."
+                    );
+
+                if (produto.QuantidadeEstoque < item.Quantidade)
+                    throw new BusinessRuleException(
+                        $"Saldo insuficiente para o produto {produto.IDProduto}."
+                    );
+
+                produtosParaBaixa.Add((produto, item.Quantidade));
+            }
+
+
+            foreach (var item in produtosParaBaixa)
+            {
+                var saldoAnterior = item.Produto.QuantidadeEstoque;
+
+                item.Produto.QuantidadeEstoque -= item.Quantidade;
+
+                var movimentacao = new MovimentacaoEstoque
+                {
+                    IDProduto = item.Produto.IDProduto,
+                    Tipo = TipoMovimentacaoEstoque.Saida,
+                    Quantidade = item.Quantidade,
+                    SaldoAnterior = saldoAnterior,
+                    SaldoPosterior = item.Produto.QuantidadeEstoque,
+                    Motivo = $"Saída referente à Nota Fiscal {dto.IDNotaFiscal}",
+                    IDNotaFiscalOrigem = dto.IDNotaFiscal,
+                    DataMovimentacao = DateTime.Now
+                };
+
+                await _movimentacao.AdicionarAsync(movimentacao);
+            }
+
+            await _movimentacao.SalvarAsync();
         }
 
     }

@@ -7,5 +7,6 @@ namespace Faturamento.Application.Interfaces
         Task<int> CriarNotaFiscalAsync(NotaFiscalCriarDto dto);
         Task<NotaFiscalDetalhesDto> BuscarNotaFiscalAsync(int IDNotaFiscal);
         Task<List<NotaFiscalResponseDto>> ListarNotasFiscaisAsync();
+        Task ImprimirNotaFiscal(int IDNotaFiscal);
     }
 }

@@ -18,6 +18,8 @@ namespace Estoque.Domain.Entities
 
         public string? Motivo { get; set; }
 
+        public int? IDNotaFiscalOrigem { get; set; }
+
         public DateTime DataMovimentacao { get; set; }
 
         public Produto Produto { get; set; } = null!;

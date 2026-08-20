@@ -6,6 +6,7 @@ namespace Estoque.Application.Interfaces
     {
         Task AdicionarAsync(MovimentacaoEstoque movimentacao);
         Task<List<MovimentacaoEstoque>> BuscarProdutoAsync(int IDProduto);
+        Task<bool> ExisteBaixaParaNotaFiscalAsync(int idNotaFiscal);
         Task SalvarAsync();
     }
 }
