@@ -13,6 +13,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NotaFiscalService } from '../../services/nota-fiscal.service';
 import { NotaFiscal, StatusNotaFiscal } from '../../models/nota-fiscal.model';
+import { extrairMensagemErro } from '../../shared/http-error.util';
+import { abrirErro, abrirSucesso } from '../../shared/feedback.util';
 
 @Component({
   selector: 'app-notas',
@@ -45,6 +47,14 @@ export class NotasComponent implements OnInit {
 
   /** IDNotaFiscal da nota sendo impressa agora, para mostrar o indicador só nela. */
   imprimindoId: number | null = null;
+
+  /**
+   * Erro da última tentativa de impressão, mantido visível na tela (não só
+   * no snackbar) até o usuário tentar de novo — falha em imprimir é o
+   * cenário central do requisito de tratamento de falhas entre
+   * microsserviços, então precisa ficar visível o tempo que for preciso.
+   */
+  erroImpressao: { numeroNota: number; mensagem: string } | null = null;
 
   form = this.fb.group({
     itens: this.fb.array([this.criarItemForm()]),
@@ -91,7 +101,7 @@ export class NotasComponent implements OnInit {
           this.notas = [];
           return;
         }
-        this.mostrarErro(err);
+        abrirErro(this.snackBar, extrairMensagemErro(err));
       },
     });
   }
@@ -109,37 +119,36 @@ export class NotasComponent implements OnInit {
         this.salvando = false;
         this.itens.clear();
         this.itens.push(this.criarItemForm());
-        this.snackBar.open('Nota fiscal criada com sucesso.', 'OK', { duration: 3000 });
+        abrirSucesso(this.snackBar, 'Nota fiscal criada com sucesso.');
         this.carregarNotas();
       },
       error: (err: HttpErrorResponse) => {
         this.salvando = false;
-        this.mostrarErro(err);
+        abrirErro(this.snackBar, extrairMensagemErro(err));
       },
     });
   }
 
   imprimir(nota: NotaFiscal): void {
     this.imprimindoId = nota.idNotaFiscal;
+    this.erroImpressao = null;
 
     this.notaFiscalService.imprimir(nota.idNotaFiscal).subscribe({
       next: () => {
         this.imprimindoId = null;
-        this.snackBar.open('Nota fiscal impressa e fechada com sucesso.', 'OK', { duration: 3000 });
+        abrirSucesso(this.snackBar, 'Nota fiscal impressa e fechada com sucesso.');
         this.carregarNotas();
       },
       error: (err: HttpErrorResponse) => {
         this.imprimindoId = null;
-        this.mostrarErro(err);
+        const mensagem = extrairMensagemErro(err);
+        this.erroImpressao = { numeroNota: nota.numero, mensagem };
+        abrirErro(this.snackBar, mensagem);
       },
     });
   }
 
-  private mostrarErro(err: HttpErrorResponse): void {
-    const mensagem =
-      err.status === 0
-        ? 'Não foi possível se conectar ao servidor. Verifique sua conexão e tente novamente.'
-        : err.error?.detail ?? err.error?.title ?? err.message ?? 'Erro desconhecido.';
-    this.snackBar.open(mensagem, 'Fechar', { duration: 8000 });
+  fecharAlertaImpressao(): void {
+    this.erroImpressao = null;
   }
 }

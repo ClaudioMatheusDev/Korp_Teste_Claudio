@@ -1,5 +1,18 @@
 <h1>Notas Fiscais</h1>
 
+@if (erroImpressao) {
+  <div class="alerta-erro">
+    <mat-icon>error_outline</mat-icon>
+    <span>
+      Falha ao imprimir a nota {{ erroImpressao.numeroNota }}: {{ erroImpressao.mensagem }}
+      Nada foi alterado — pode tentar novamente.
+    </span>
+    <button mat-icon-button (click)="fecharAlertaImpressao()" aria-label="Fechar alerta">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+}
+
 <mat-card class="form-card">
   <mat-card-header>
     <mat-card-title>Criar nota fiscal</mat-card-title>

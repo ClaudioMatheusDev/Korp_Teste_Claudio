@@ -11,6 +11,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ProdutoService } from '../../services/produto.service';
 import { Produto } from '../../models/produto.model';
+import { extrairMensagemErro } from '../../shared/http-error.util';
+import { abrirErro, abrirSucesso } from '../../shared/feedback.util';
 
 @Component({
   selector: 'app-produtos',
@@ -91,7 +93,7 @@ export class ProdutosComponent implements OnInit {
         next: () => {
           this.salvando = false;
           this.form.reset();
-          this.snackBar.open('Produto cadastrado com sucesso.', 'OK', { duration: 3000 });
+          abrirSucesso(this.snackBar, 'Produto cadastrado com sucesso.');
           this.carregarProdutos();
         },
         error: (err: HttpErrorResponse) => {
@@ -102,7 +104,6 @@ export class ProdutosComponent implements OnInit {
   }
 
   private mostrarErro(err: HttpErrorResponse): void {
-    const mensagem = err.error?.detail ?? err.error?.title ?? err.message ?? 'Erro desconhecido.';
-    this.snackBar.open(mensagem, 'Fechar', { duration: 6000 });
+    abrirErro(this.snackBar, extrairMensagemErro(err));
   }
 }
