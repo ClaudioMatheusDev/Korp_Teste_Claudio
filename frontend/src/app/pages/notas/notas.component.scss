@@ -1,0 +1,35 @@
+.form-card {
+  margin-bottom: 24px;
+}
+
+.item-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.submit-row {
+  margin-top: 16px;
+
+  button {
+    height: 44px;
+    min-width: 180px;
+  }
+}
+
+.full-width {
+  width: 100%;
+}
+
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  padding: 32px;
+}
+
+.empty-state {
+  text-align: center;
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: 16px;
+}

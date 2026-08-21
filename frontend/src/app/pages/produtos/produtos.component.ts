@@ -2,23 +2,41 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatTableModule } from '@angular/material/table';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ProdutoService } from '../../services/produto.service';
 import { Produto } from '../../models/produto.model';
 
 @Component({
   selector: 'app-produtos',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatTableModule,
+    MatProgressSpinnerModule,
+  ],
   templateUrl: './produtos.component.html',
   styleUrl: './produtos.component.scss',
 })
 export class ProdutosComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly snackBar = inject(MatSnackBar);
+
+  readonly colunas = ['idProduto', 'codigo', 'descricao', 'valorProduto', 'quantidadeEstoque'];
+
   produtos: Produto[] = [];
   carregando = false;
   salvando = false;
-  erro: string | null = null;
-
-  private readonly fb = inject(FormBuilder);
 
   form = this.fb.group({
     codigo: [null as number | null, [Validators.required, Validators.min(1)]],
@@ -35,7 +53,6 @@ export class ProdutosComponent implements OnInit {
 
   carregarProdutos(): void {
     this.carregando = true;
-    this.erro = null;
 
     this.produtoService.listar().subscribe({
       next: (produtos) => {
@@ -48,7 +65,7 @@ export class ProdutosComponent implements OnInit {
           this.produtos = [];
           return;
         }
-        this.erro = this.extrairMensagemErro(err);
+        this.mostrarErro(err);
       },
     });
   }
@@ -60,7 +77,6 @@ export class ProdutosComponent implements OnInit {
     }
 
     this.salvando = true;
-    this.erro = null;
 
     const valor = this.form.getRawValue();
 
@@ -75,16 +91,18 @@ export class ProdutosComponent implements OnInit {
         next: () => {
           this.salvando = false;
           this.form.reset();
+          this.snackBar.open('Produto cadastrado com sucesso.', 'OK', { duration: 3000 });
           this.carregarProdutos();
         },
         error: (err: HttpErrorResponse) => {
           this.salvando = false;
-          this.erro = this.extrairMensagemErro(err);
+          this.mostrarErro(err);
         },
       });
   }
 
-  private extrairMensagemErro(err: HttpErrorResponse): string {
-    return err.error?.detail ?? err.error?.title ?? err.message ?? 'Erro desconhecido.';
+  private mostrarErro(err: HttpErrorResponse): void {
+    const mensagem = err.error?.detail ?? err.error?.title ?? err.message ?? 'Erro desconhecido.';
+    this.snackBar.open(mensagem, 'Fechar', { duration: 6000 });
   }
 }
