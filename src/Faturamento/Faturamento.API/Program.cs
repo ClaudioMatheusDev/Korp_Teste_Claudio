@@ -19,6 +19,15 @@ builder.Services.AddScoped<INotaFiscalService, NotaFiscalService>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
+const string AngularDevPolicy = "AngularDev";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(AngularDevPolicy, policy =>
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -37,6 +46,8 @@ builder.Services.AddHttpClient<IEstoqueClient, EstoqueClient>(client =>
 var app = builder.Build();
 
 app.UseExceptionHandler();
+
+app.UseCors(AngularDevPolicy);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
