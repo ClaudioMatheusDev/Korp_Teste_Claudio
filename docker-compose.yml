@@ -1,0 +1,83 @@
+name: korp-teste-claudio
+
+services:
+  faturamento-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: faturamento-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:-Korp@12345}
+    ports:
+      - "1433:1433"
+    volumes:
+      - faturamento-db-data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  estoque-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: estoque-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:-Korp@12345}
+    ports:
+      - "1434:1433"
+    volumes:
+      - estoque-db-data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  estoque-api:
+    build:
+      context: .
+      dockerfile: src/Estoque/Estoque.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      APPLY_MIGRATIONS: "true"
+      ConnectionStrings__DefaultConnection: Server=estoque-db,1433;Database=Korp_Produto;User Id=sa;Password=${SA_PASSWORD:-Korp@12345};Encrypt=False;TrustServerCertificate=True
+    ports:
+      - "5268:8080"
+    depends_on:
+      estoque-db:
+        condition: service_healthy
+
+  faturamento-api:
+    build:
+      context: .
+      dockerfile: src/Faturamento/Faturamento.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      APPLY_MIGRATIONS: "true"
+      ConnectionStrings__DefaultConnection: Server=faturamento-db,1433;Database=Korp_Faturamento;User Id=sa;Password=${SA_PASSWORD:-Korp@12345};Encrypt=False;TrustServerCertificate=True
+      Services__EstoqueApi: http://estoque-api:8080/
+    ports:
+      - "5237:8080"
+    depends_on:
+      faturamento-db:
+        condition: service_healthy
+      estoque-api:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "4200:80"
+    depends_on:
+      - estoque-api
+      - faturamento-api
+
+volumes:
+  faturamento-db-data:
+  estoque-db-data:
