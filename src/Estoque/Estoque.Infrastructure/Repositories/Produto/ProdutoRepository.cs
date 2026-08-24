@@ -50,5 +50,10 @@ namespace Estoque.Infrastructure
             return await _context.Produtos.AnyAsync(p => p.Codigo == codigo && p.IDProduto != idProdutoIgnorar);
         }
 
+        public async Task RecarregarAsync(Produto produto)
+        {
+            await _context.Entry(produto).ReloadAsync();
+        }
+
     }
 }
