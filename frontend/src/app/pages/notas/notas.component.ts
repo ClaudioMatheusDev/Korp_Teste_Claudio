@@ -6,6 +6,7 @@ import { finalize } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
@@ -14,6 +15,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NotaFiscalService } from '../../services/nota-fiscal.service';
 import { NotaFiscal, StatusNotaFiscal } from '../../models/nota-fiscal.model';
+import { ProdutoService } from '../../services/produto.service';
+import { Produto } from '../../models/produto.model';
 import { extrairMensagemErro } from '../../shared/http-error.util';
 import { abrirErro, abrirSucesso } from '../../shared/feedback.util';
 
@@ -26,6 +29,7 @@ import { abrirErro, abrirSucesso } from '../../shared/feedback.util';
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
     MatButtonModule,
     MatIconModule,
     MatTableModule,
@@ -43,6 +47,7 @@ export class NotasComponent implements OnInit {
   readonly StatusNotaFiscal = StatusNotaFiscal;
 
   notas: NotaFiscal[] = [];
+  produtosDisponiveis: Produto[] = [];
   carregando = false;
   salvando = false;
 
@@ -61,10 +66,27 @@ export class NotasComponent implements OnInit {
     itens: this.fb.array([this.criarItemForm()]),
   });
 
-  constructor(private readonly notaFiscalService: NotaFiscalService) {}
+  constructor(
+    private readonly notaFiscalService: NotaFiscalService,
+    private readonly produtoService: ProdutoService,
+  ) {}
 
   ngOnInit(): void {
     this.carregarNotas();
+    this.carregarProdutosDisponiveis();
+  }
+
+  carregarProdutosDisponiveis(): void {
+    this.produtoService.listar().subscribe({
+      next: (produtos) => (this.produtosDisponiveis = produtos.filter((p) => p.quantidadeEstoque > 0)),
+      error: (err: HttpErrorResponse) => {
+        if (err.status === 404) {
+          this.produtosDisponiveis = [];
+          return;
+        }
+        abrirErro(this.snackBar, extrairMensagemErro(err));
+      },
+    });
   }
 
   get itens(): FormArray {
@@ -139,6 +161,7 @@ export class NotasComponent implements OnInit {
         next: (resposta) => {
           abrirSucesso(this.snackBar, resposta.message);
           this.carregarNotas();
+          this.carregarProdutosDisponiveis();
         },
         error: (err: HttpErrorResponse) => {
           const mensagem = extrairMensagemErro(err);
