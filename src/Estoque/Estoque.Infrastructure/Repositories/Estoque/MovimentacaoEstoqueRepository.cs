@@ -1,4 +1,5 @@
-﻿using Estoque.Application.Interfaces;
+﻿using Estoque.Application.Exceptions;
+using Estoque.Application.Interfaces;
 using Estoque.Domain.Entities;
 using Estoque.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +33,15 @@ namespace Estoque.Infrastructure.Repositories
 
         public async Task SalvarAsync()
         {
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException ex)
+            {
+                throw new ConcurrencyConflictException(
+                    "Os dados foram alterados por outra operação simultânea.", ex);
+            }
         }
     }
 }

@@ -113,6 +113,34 @@ frontend via **npm** (`package.json`).
   baixa mas o Faturamento falha ao salvar o fechamento da nota), o
   reprocessamento não duplica o efeito.
 
+## Tratamento de concorrência (opcional)
+
+Cenário do edital: produto com saldo 1 sendo usado simultaneamente por duas
+notas fiscais. Sem tratamento, as duas requisições leem saldo = 1, ambas
+passam na validação e ambas gravam — o saldo final fica incorreto (ou
+negativo), dependendo da ordem de escrita.
+
+A solução usa **concorrência otimista do EF Core**: a entidade `Produto`
+ganhou uma coluna `RowVersion` (`[Timestamp]`, tipo `rowversion` do SQL
+Server, atualizada automaticamente pelo banco a cada `UPDATE`). Quando duas
+requisições carregam o mesmo produto e uma delas salva primeiro, a segunda
+tenta salvar com um `RowVersion` desatualizado — o EF Core detecta isso e
+lança `DbUpdateConcurrencyException` em vez de sobrescrever o dado.
+
+`EstoqueService` (`EntradaAsync`, `SaidaAsync`, `BaixarLoteAsync`) captura
+esse conflito, **recarrega o produto do banco** (`RecarregarAsync`) e
+**reavalia a regra de negócio com o saldo atual**, tentando de novo — até 3
+vezes. Se o saldo já foi consumido por outra requisição, a segunda nota
+recebe `BusinessRuleException` ("Saldo insuficiente"), não um erro genérico
+nem uma sobrescrita silenciosa. Testado ao vivo: produto com saldo 1 +
+duas notas simultâneas → uma dá baixa com sucesso, a outra recebe 400 com
+mensagem clara, saldo final = 0 (nunca negativo).
+
+Para manter a camada de Application livre de dependência do EF Core, a
+exceção é traduzida na borda do repositório
+(`Estoque.Infrastructure/Repositories/Estoque/MovimentacaoEstoqueRepository.cs`)
+para uma exceção própria da Application (`ConcurrencyConflictException`).
+
 ## 8. Uso de LINQ
 
 Usado extensivamente na camada de Application e nos repositórios do EF
