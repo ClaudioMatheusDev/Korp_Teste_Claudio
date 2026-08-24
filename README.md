@@ -39,15 +39,26 @@ nos produtos. Essa chamada usa retry/circuit-breaker padrão do .NET
 
 ## Como rodar
 
-Suba os três processos em terminais separados:
+### Opção 1 — Docker Compose (sobe tudo de uma vez)
+
+```bash
+docker compose up --build
+```
+
+Sobe os dois bancos SQL Server, as duas APIs (com migrations aplicadas
+automaticamente ao iniciar) e o frontend via Nginx em `http://localhost:4200`.
+
+### Opção 2 — manualmente, em 3 terminais
 
 ```bash
 # 1. Estoque.API (porta 5268)
 cd src/Estoque/Estoque.API
+dotnet ef database update 
 dotnet run --urls http://localhost:5268
 
 # 2. Faturamento.API (porta 5237)
 cd src/Faturamento/Faturamento.API
+dotnet ef database update
 dotnet run --urls http://localhost:5237
 
 # 3. Frontend Angular (porta 4200)
@@ -56,9 +67,7 @@ npm install
 npm start
 ```
 
-Acesse `http://localhost:4200`. As migrations do EF Core rodam
-automaticamente na primeira consulta/gravação em cada banco (ou aplique
-manualmente com `dotnet ef database update` dentro de cada pasta `*.API`).
+Acesse `http://localhost:4200`.
 
 ## Funcionalidades
 
@@ -69,3 +78,6 @@ manualmente com `dotnet ef database update` dentro de cada pasta `*.API`).
   Estoque na tela
 - Idempotência: reprocessar uma baixa de estoque ou uma impressão já
   concluída não duplica o efeito
+- Concorrência: baixa de estoque usa concurrency token do EF Core
+  (`RowVersion`) para impedir saldo negativo quando duas notas fiscais dão
+  baixa no mesmo produto ao mesmo tempo

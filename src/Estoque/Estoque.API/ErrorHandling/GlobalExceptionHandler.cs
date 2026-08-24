@@ -22,6 +22,7 @@ namespace Estoque.API.ErrorHandling
             {
                 NotFoundException => (StatusCodes.Status404NotFound, "Recurso não encontrado"),
                 ConflictException => (StatusCodes.Status409Conflict, "Conflito"),
+                ConcurrencyConflictException => (StatusCodes.Status409Conflict, "Conflito de concorrência"),
                 BusinessRuleException => (StatusCodes.Status400BadRequest, "Regra de negócio violada"),
                 _ => (StatusCodes.Status500InternalServerError, "Erro interno do servidor")
             };
