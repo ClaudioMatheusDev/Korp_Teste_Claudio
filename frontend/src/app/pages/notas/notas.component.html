@@ -24,8 +24,17 @@
         @for (item of itens.controls; track item; let i = $index) {
           <div [formGroupName]="i" class="item-row">
             <mat-form-field appearance="outline">
-              <mat-label>Produto (ID)</mat-label>
-              <input matInput type="number" formControlName="idProduto" />
+              <mat-label>Produto</mat-label>
+              <mat-select formControlName="idProduto">
+                @for (produto of produtosDisponiveis; track produto.idProduto) {
+                  <mat-option [value]="produto.idProduto">
+                    {{ produto.codigo }} - {{ produto.descricao }} (saldo: {{ produto.quantidadeEstoque }})
+                  </mat-option>
+                }
+              </mat-select>
+              @if (produtosDisponiveis.length === 0) {
+                <mat-hint>Nenhum produto com saldo disponível.</mat-hint>
+              }
             </mat-form-field>
 
             <mat-form-field appearance="outline">
