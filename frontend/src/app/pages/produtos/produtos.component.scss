@@ -1,12 +1,19 @@
-.form-card {
+h1 {
   margin-bottom: 24px;
+  font-weight: 600;
+}
+
+.form-card {
+  margin-bottom: 32px;
+  border-radius: 12px;
 }
 
 .form-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 20px;
   align-items: flex-start;
+  padding-top: 8px;
 
   mat-form-field {
     flex: 1 1 200px;
@@ -20,16 +27,32 @@
 
 .full-width {
   width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+
+  th.mat-mdc-header-cell {
+    padding: 16px;
+    font-weight: 600;
+  }
+
+  td.mat-mdc-cell {
+    padding: 14px 16px;
+  }
+
+  tr.mat-mdc-row:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+  }
 }
 
 .spinner-container {
   display: flex;
   justify-content: center;
-  padding: 32px;
+  padding: 48px;
 }
 
 .empty-state {
   text-align: center;
   color: rgba(0, 0, 0, 0.6);
-  margin-top: 16px;
+  margin-top: 24px;
+  padding: 24px;
 }
