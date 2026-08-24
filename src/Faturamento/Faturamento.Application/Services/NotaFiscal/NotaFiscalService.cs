@@ -105,7 +105,7 @@ namespace Faturamento.Application.Services
             }).ToList();
         }
 
-        public async Task ImprimirNotaFiscal(int IDNotaFiscal)
+        public async Task<bool> ImprimirNotaFiscal(int IDNotaFiscal)
         {
             var notaFiscal = await _notaFiscalRepository.BuscarNotaFiscalPorIDAsync(IDNotaFiscal);
 
@@ -116,7 +116,7 @@ namespace Faturamento.Application.Services
 
             if (notaFiscal.Status == StatusNotaFiscal.Fechada)
             {
-                return;
+                return false;
             }
 
             var baixaEstoque = new BaixaEstoqueLoteDto
@@ -150,6 +150,8 @@ namespace Faturamento.Application.Services
 
                 throw;
             }
+
+            return true;
         }
     }
 }
