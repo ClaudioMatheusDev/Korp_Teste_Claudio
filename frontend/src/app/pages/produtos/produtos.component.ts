@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { finalize } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -56,20 +57,19 @@ export class ProdutosComponent implements OnInit {
   carregarProdutos(): void {
     this.carregando = true;
 
-    this.produtoService.listar().subscribe({
-      next: (produtos) => {
-        this.produtos = produtos;
-        this.carregando = false;
-      },
-      error: (err: HttpErrorResponse) => {
-        this.carregando = false;
-        if (err.status === 404) {
-          this.produtos = [];
-          return;
-        }
-        this.mostrarErro(err);
-      },
-    });
+    this.produtoService
+      .listar()
+      .pipe(finalize(() => (this.carregando = false)))
+      .subscribe({
+        next: (produtos) => (this.produtos = produtos),
+        error: (err: HttpErrorResponse) => {
+          if (err.status === 404) {
+            this.produtos = [];
+            return;
+          }
+          this.mostrarErro(err);
+        },
+      });
   }
 
   salvar(): void {
@@ -89,17 +89,14 @@ export class ProdutosComponent implements OnInit {
         valorProduto: valor.valorProduto!,
         quantidadeEstoque: valor.quantidadeEstoque!,
       })
+      .pipe(finalize(() => (this.salvando = false)))
       .subscribe({
         next: () => {
-          this.salvando = false;
           this.form.reset();
           abrirSucesso(this.snackBar, 'Produto cadastrado com sucesso.');
           this.carregarProdutos();
         },
-        error: (err: HttpErrorResponse) => {
-          this.salvando = false;
-          this.mostrarErro(err);
-        },
+        error: (err: HttpErrorResponse) => this.mostrarErro(err),
       });
   }
 
