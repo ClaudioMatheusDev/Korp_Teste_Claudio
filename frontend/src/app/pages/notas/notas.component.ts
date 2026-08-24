@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { finalize } from 'rxjs';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -90,20 +91,19 @@ export class NotasComponent implements OnInit {
   carregarNotas(): void {
     this.carregando = true;
 
-    this.notaFiscalService.listar().subscribe({
-      next: (notas) => {
-        this.notas = notas;
-        this.carregando = false;
-      },
-      error: (err: HttpErrorResponse) => {
-        this.carregando = false;
-        if (err.status === 404) {
-          this.notas = [];
-          return;
-        }
-        abrirErro(this.snackBar, extrairMensagemErro(err));
-      },
-    });
+    this.notaFiscalService
+      .listar()
+      .pipe(finalize(() => (this.carregando = false)))
+      .subscribe({
+        next: (notas) => (this.notas = notas),
+        error: (err: HttpErrorResponse) => {
+          if (err.status === 404) {
+            this.notas = [];
+            return;
+          }
+          abrirErro(this.snackBar, extrairMensagemErro(err));
+        },
+      });
   }
 
   salvar(): void {
@@ -114,38 +114,38 @@ export class NotasComponent implements OnInit {
 
     this.salvando = true;
 
-    this.notaFiscalService.criar(this.form.getRawValue() as any).subscribe({
-      next: () => {
-        this.salvando = false;
-        this.itens.clear();
-        this.itens.push(this.criarItemForm());
-        abrirSucesso(this.snackBar, 'Nota fiscal criada com sucesso.');
-        this.carregarNotas();
-      },
-      error: (err: HttpErrorResponse) => {
-        this.salvando = false;
-        abrirErro(this.snackBar, extrairMensagemErro(err));
-      },
-    });
+    this.notaFiscalService
+      .criar(this.form.getRawValue() as any)
+      .pipe(finalize(() => (this.salvando = false)))
+      .subscribe({
+        next: () => {
+          this.itens.clear();
+          this.itens.push(this.criarItemForm());
+          abrirSucesso(this.snackBar, 'Nota fiscal criada com sucesso.');
+          this.carregarNotas();
+        },
+        error: (err: HttpErrorResponse) => abrirErro(this.snackBar, extrairMensagemErro(err)),
+      });
   }
 
   imprimir(nota: NotaFiscal): void {
     this.imprimindoId = nota.idNotaFiscal;
     this.erroImpressao = null;
 
-    this.notaFiscalService.imprimir(nota.idNotaFiscal).subscribe({
-      next: (resposta) => {
-        this.imprimindoId = null;
-        abrirSucesso(this.snackBar, resposta.message);
-        this.carregarNotas();
-      },
-      error: (err: HttpErrorResponse) => {
-        this.imprimindoId = null;
-        const mensagem = extrairMensagemErro(err);
-        this.erroImpressao = { numeroNota: nota.numero, mensagem };
-        abrirErro(this.snackBar, mensagem);
-      },
-    });
+    this.notaFiscalService
+      .imprimir(nota.idNotaFiscal)
+      .pipe(finalize(() => (this.imprimindoId = null)))
+      .subscribe({
+        next: (resposta) => {
+          abrirSucesso(this.snackBar, resposta.message);
+          this.carregarNotas();
+        },
+        error: (err: HttpErrorResponse) => {
+          const mensagem = extrairMensagemErro(err);
+          this.erroImpressao = { numeroNota: nota.numero, mensagem };
+          abrirErro(this.snackBar, mensagem);
+        },
+      });
   }
 
   fecharAlertaImpressao(): void {
