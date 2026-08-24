@@ -1,8 +1,15 @@
-<mat-toolbar color="primary">
-  <span>Sistema Nota Fiscal</span>
+<mat-toolbar color="primary" class="app-toolbar">
+  <mat-icon class="brand-icon">receipt_long</mat-icon>
+  <span class="brand-title">Sistema Nota Fiscal</span>
   <span class="spacer"></span>
-  <a mat-button routerLink="/produtos" routerLinkActive="active-link">Produtos</a>
-  <a mat-button routerLink="/notas" routerLinkActive="active-link">Notas Fiscais</a>
+  <a mat-button routerLink="/produtos" routerLinkActive="active-link">
+    <mat-icon>inventory_2</mat-icon>
+    Produtos
+  </a>
+  <a mat-button routerLink="/notas" routerLinkActive="active-link">
+    <mat-icon>description</mat-icon>
+    Notas Fiscais
+  </a>
 </mat-toolbar>
 
 <main class="page-content">
