@@ -134,9 +134,9 @@ export class NotasComponent implements OnInit {
     this.erroImpressao = null;
 
     this.notaFiscalService.imprimir(nota.idNotaFiscal).subscribe({
-      next: () => {
+      next: (resposta) => {
         this.imprimindoId = null;
-        abrirSucesso(this.snackBar, 'Nota fiscal impressa e fechada com sucesso.');
+        abrirSucesso(this.snackBar, resposta.message);
         this.carregarNotas();
       },
       error: (err: HttpErrorResponse) => {

@@ -49,11 +49,13 @@ namespace Faturamento.API.Controllers.Faturamento
         [HttpPost("{IDNotaFiscal:int}/imprimir")]
         public async Task<IActionResult> ImprimirNota(int IDNotaFiscal)
         {
-            await _notaService.ImprimirNotaFiscal(IDNotaFiscal);
+            var impressaAgora = await _notaService.ImprimirNotaFiscal(IDNotaFiscal);
 
             return Ok(new
             {
-                Message = "Nota fiscal impressa e fechada com sucesso."
+                Message = impressaAgora
+                    ? "Nota fiscal impressa e fechada com sucesso."
+                    : "Nota fiscal já estava fechada. Nenhuma impressão foi realizada."
             });
         }
     }
